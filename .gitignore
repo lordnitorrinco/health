@@ -1,0 +1,34 @@
+# Dependencias
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs y caché
+*.log
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
