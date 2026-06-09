@@ -24,16 +24,19 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
+      "expo-system-ui",
       "expo-health-connect",
       [
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 26
+            "minSdkVersion": 26,
+            "buildArchs": ["arm64-v8a", "armeabi-v7a"]
           }
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "./plugins/withAndroidBuild.js"
     ],
     "experiments": {
       "typedRoutes": true

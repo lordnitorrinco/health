@@ -24,10 +24,10 @@ function localDayTimeRange(): TimeRangeFilter {
 }
 
 function hasStepsReadPermission(
-  permissions: Awaited<ReturnType<typeof getGrantedPermissions>>,
+  permissions: ReadonlyArray<{ recordType?: string; accessType?: string }>,
 ): boolean {
   return permissions.some(
-    (p) => 'recordType' in p && p.recordType === 'Steps' && p.accessType === 'read',
+    (p) => p.recordType === 'Steps' && p.accessType === 'read',
   );
 }
 
@@ -52,10 +52,10 @@ export async function ensureHealthConnectReady(): Promise<boolean> {
     if (!initialized) return false;
   }
 
-  let granted = await getGrantedPermissions();
+  const granted = await getGrantedPermissions();
   if (!hasStepsReadPermission(granted)) {
-    granted = await requestPermission([{ accessType: 'read', recordType: 'Steps' }]);
-    if (!hasStepsReadPermission(granted)) return false;
+    const requested = await requestPermission([{ accessType: 'read', recordType: 'Steps' }]);
+    if (!hasStepsReadPermission(requested)) return false;
   }
 
   healthConnectReady = true;

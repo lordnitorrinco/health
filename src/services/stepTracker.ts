@@ -10,7 +10,6 @@ import {
 
 let subscription: EventSubscription | null = null;
 let baselineSteps = 0;
-let lastWatchSteps = 0;
 let started = false;
 let healthConnectMode = false;
 
@@ -30,7 +29,6 @@ async function startWatching() {
   if (subscription) return;
 
   subscription = Pedometer.watchStepCount((result) => {
-    lastWatchSteps = result.steps;
     void syncFromWatch(result.steps);
   });
 }
@@ -38,7 +36,6 @@ async function startWatching() {
 function stopWatching() {
   subscription?.remove();
   subscription = null;
-  lastWatchSteps = 0;
 }
 
 async function refreshBaseline() {
