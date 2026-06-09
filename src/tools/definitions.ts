@@ -126,14 +126,15 @@ export const toolDefinitions: Tool[] = [
     date: { type: 'string' },
     slot: { type: 'string', enum: mealSlotEnum },
   }, ['date']),
-  tool('set_meal', 'Define comida del plan.', {
+  tool('set_meal', 'Define comida del plan. time es la hora HH:MM.', {
     date: { type: 'string' },
     slot: { type: 'string', enum: mealSlotEnum },
     description: { type: 'string' },
     calories: { type: 'number' },
+    time: { type: 'string' },
   }, ['date', 'slot', 'description']),
   tool('delete_meal', 'Elimina comida del plan.', { id: { type: 'number' } }, ['id']),
-  tool('set_meals_batch', 'Define múltiples comidas del plan.', {
+  tool('set_meals_batch', 'Define múltiples comidas del plan. time es la hora HH:MM.', {
     meals: {
       type: 'array',
       items: {
@@ -143,6 +144,7 @@ export const toolDefinitions: Tool[] = [
           slot: { type: 'string', enum: mealSlotEnum },
           description: { type: 'string' },
           calories: { type: 'number' },
+          time: { type: 'string' },
         },
         required: ['date', 'slot', 'description'],
       },
@@ -249,6 +251,21 @@ export const toolDefinitions: Tool[] = [
     supplement_id: { type: 'number' },
   }, ['from', 'to']),
   tool('delete_supplement_intake', 'Elimina una toma de suplemento.', { id: { type: 'number' } }, ['id']),
+
+  tool('set_batch_cooking', 'Define las instrucciones semanales de preparación (batch cooking). week_start opcional (fecha de cualquier día de la semana, se normaliza al lunes); por defecto la semana actual.', {
+    instructions: { type: 'string' },
+    week_start: { type: 'string' },
+  }, ['instructions']),
+  tool('get_batch_cooking', 'Instrucciones de batch cooking de una semana (por defecto la actual).', {
+    week_start: { type: 'string' },
+  }),
+  tool('list_batch_cooking', 'Lista instrucciones de batch cooking; opcionalmente en un rango de fechas.', {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  }),
+  tool('delete_batch_cooking', 'Elimina las instrucciones de batch cooking de una semana.', {
+    week_start: { type: 'string' },
+  }),
 
   tool('get_today_context', 'Contexto de hoy: calendario, sesión, comidas, pasos.', {}),
   tool('get_exercise_progression', 'Progresión de ejercicio o grupo muscular.', {

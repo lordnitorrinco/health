@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS meals (
   date TEXT NOT NULL,
   slot TEXT NOT NULL,
   description TEXT NOT NULL,
-  calories INTEGER
+  calories INTEGER,
+  time TEXT
 );
 CREATE INDEX IF NOT EXISTS meals_date_slot_idx ON meals(date, slot);
 
@@ -111,4 +112,17 @@ CREATE TABLE IF NOT EXISTS supplement_intake (
 );
 CREATE INDEX IF NOT EXISTS supplement_intake_supp_idx ON supplement_intake(supplement_id);
 CREATE INDEX IF NOT EXISTS supplement_intake_taken_idx ON supplement_intake(taken_at);
+
+CREATE TABLE IF NOT EXISTS batch_cooking (
+  week_start TEXT PRIMARY KEY,
+  instructions TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `;
+
+// Migraciones de columnas para BBDD ya existentes. SQLite no soporta
+// "ADD COLUMN IF NOT EXISTS", así que cada sentencia se ejecuta por separado
+// y se ignora el error si la columna ya existe.
+export const COLUMN_MIGRATIONS = [
+  'ALTER TABLE meals ADD COLUMN time TEXT;',
+];

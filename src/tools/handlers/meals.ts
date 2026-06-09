@@ -19,6 +19,7 @@ export async function setMeal(input: {
   slot: MealSlot;
   description: string;
   calories?: number;
+  time?: string;
 }) {
   await getDb()
     .delete(meals)
@@ -31,6 +32,7 @@ export async function setMeal(input: {
       slot: input.slot,
       description: input.description,
       calories: input.calories ?? null,
+      time: input.time?.trim() ?? null,
     })
     .returning();
   return toolOk(row);
@@ -42,7 +44,13 @@ export async function deleteMeal(input: { id: number }) {
 }
 
 export async function setMealsBatch(input: {
-  meals: { date: string; slot: MealSlot; description: string; calories?: number }[];
+  meals: {
+    date: string;
+    slot: MealSlot;
+    description: string;
+    calories?: number;
+    time?: string;
+  }[];
 }) {
   if (!input.meals?.length) return toolErr('meals vacío');
   const db = getDb();
@@ -58,6 +66,7 @@ export async function setMealsBatch(input: {
         slot: m.slot,
         description: m.description,
         calories: m.calories ?? null,
+        time: m.time?.trim() ?? null,
       })
       .returning();
     created.push(row);

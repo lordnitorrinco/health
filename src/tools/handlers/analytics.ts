@@ -12,9 +12,9 @@ import {
 import { getActiveSession } from './sessions';
 import { getDailyCalorieTarget } from './intake';
 import { sumPlannedCalories } from './meals';
-import { dayEnd, dayStart, todayIso, toolOk } from '../utils';
+import { dayEnd, dayStart, todayIso, toolOk, weekStartIso } from '../utils';
 import { getTodayStepsCount, getDailyStepsGoalValue } from './stepCount';
-import { supplements, supplementIntake } from '@/db/schema';
+import { supplements, supplementIntake, batchCooking } from '@/db/schema';
 
 export async function getTodayContext(_input: Record<string, never>) {
   const date = todayIso();
@@ -87,6 +87,12 @@ export async function getTodayContext(_input: Record<string, never>) {
       )
     );
 
+  const weekStart = weekStartIso(date);
+  const [weekBatchCooking] = await getDb()
+    .select()
+    .from(batchCooking)
+    .where(eq(batchCooking.weekStart, weekStart));
+
   return toolOk({
     date,
     schedule: sched ?? null,
@@ -100,6 +106,8 @@ export async function getTodayContext(_input: Record<string, never>) {
     steps_goal_reached: stepsGoal !== null ? stepsToday >= stepsGoal : null,
     active_supplements: activeSupplements,
     supplements_taken_today: supplementsTakenToday,
+    week_start: weekStart,
+    batch_cooking: weekBatchCooking ?? null,
   });
 }
 

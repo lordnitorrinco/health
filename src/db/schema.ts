@@ -75,6 +75,7 @@ export const meals = sqliteTable(
     slot: text('slot').notNull(),
     description: text('description').notNull(),
     calories: integer('calories'),
+    time: text('time'),
   },
   (t) => [index('meals_date_slot_idx').on(t.date, t.slot)]
 );
@@ -126,3 +127,4 @@ export const MEAL_SLOTS: MealSlot[] = [
 export { dailySteps } from './dailyStepsSchema';
 export { chatMessages } from './chatSchema';
 export { supplements, supplementIntake } from './supplementsSchema';
+export { batchCooking } from './batchCookingSchema';

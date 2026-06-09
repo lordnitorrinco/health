@@ -8,6 +8,7 @@ import * as intake from './handlers/intake';
 import * as bodyMetrics from './handlers/bodyMetrics';
 import * as stepCount from './handlers/stepCount';
 import * as supplements from './handlers/supplements';
+import * as batchCooking from './handlers/batchCooking';
 import * as analytics from './handlers/analytics';
 import { runWithDb } from '@/db/client';
 import { getDailyCalorieTarget } from './handlers/intake';
@@ -80,6 +81,11 @@ const handlers: Record<string, Handler> = {
   log_supplement_intake: (i) => supplements.logSupplementIntake(i as never),
   list_supplement_intake: (i) => supplements.listSupplementIntake(i as never),
   delete_supplement_intake: (i) => supplements.deleteSupplementIntake(i as never),
+
+  set_batch_cooking: (i) => batchCooking.setBatchCooking(i as never),
+  get_batch_cooking: (i) => batchCooking.getBatchCooking(i as never),
+  list_batch_cooking: (i) => batchCooking.listBatchCooking(i as never),
+  delete_batch_cooking: (i) => batchCooking.deleteBatchCooking(i as never),
 
   get_today_context: () => analytics.getTodayContext({}),
   get_exercise_progression: (i) => analytics.getExerciseProgression(i as never),

@@ -3,7 +3,7 @@ import {
   type SQLiteDatabase,
 } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { MIGRATION_SQL } from './migrationSql';
+import { COLUMN_MIGRATIONS, MIGRATION_SQL } from './migrationSql';
 import * as schema from './schema';
 
 export const DB_NAME = 'health.db';
@@ -16,6 +16,13 @@ let dbTaskDepth = 0;
 function openConnection() {
   const sqlite = openDatabaseSync(DB_NAME);
   sqlite.execSync(MIGRATION_SQL);
+  for (const stmt of COLUMN_MIGRATIONS) {
+    try {
+      sqlite.execSync(stmt);
+    } catch {
+      // La columna ya existe; ignorar.
+    }
+  }
   return sqlite;
 }
 

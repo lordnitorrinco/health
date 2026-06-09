@@ -6,6 +6,15 @@ export function nowIso(): string {
   return new Date().toISOString();
 }
 
+/** Devuelve el lunes (YYYY-MM-DD) de la semana de la fecha dada (o de hoy). */
+export function weekStartIso(date?: string): string {
+  const base = date ? new Date(date + 'T12:00:00') : new Date();
+  const day = base.getDay();
+  const diff = (day + 6) % 7;
+  base.setDate(base.getDate() - diff);
+  return base.toISOString().slice(0, 10);
+}
+
 export function parseDateRange(from: string, to: string): string[] {
   const dates: string[] = [];
   const start = new Date(from + 'T12:00:00');
