@@ -1,0 +1,41 @@
+{
+  "name": "health",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "prebuild": "expo prebuild --platform android",
+    "build:apk": "expo prebuild --platform android && cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "babel-plugin-module-resolver": "^5.0.3",
+    "babel-preset-expo": "^56.0.14",
+    "drizzle-orm": "^0.45.2",
+    "expo": "~56.0.9",
+    "expo-build-properties": "^56.0.17",
+    "expo-constants": "~56.0.17",
+    "expo-document-picker": "~56.0.4",
+    "expo-file-system": "~56.0.7",
+    "expo-health-connect": "^0.1.1",
+    "expo-linking": "~56.0.13",
+    "expo-router": "~56.2.9",
+    "expo-secure-store": "~56.0.4",
+    "expo-sensors": "~56.0.5",
+    "expo-sharing": "~56.0.16",
+    "expo-sqlite": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-health-connect": "^3.5.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}

@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Health",
+    "slug": "health",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "health",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.lordnitorrinco.gym",
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.INTERNET",
+        "android.permission.health.READ_STEPS"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#111827",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
