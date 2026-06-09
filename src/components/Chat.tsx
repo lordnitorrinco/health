@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  AppState,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { runAgent, type ChatMessage } from '@/agent/loop';
+import { useTodaySteps } from '@/hooks/useTodaySteps';
 import { refreshTodayStepsDisplay } from '@/services/stepTracker';
 
 export function Chat() {
@@ -22,20 +22,8 @@ export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [stepsToday, setStepsToday] = useState(0);
+  const stepsToday = useTodaySteps();
   const listRef = useRef<FlatList>(null);
-
-  const loadSteps = useCallback(async () => {
-    setStepsToday(await refreshTodayStepsDisplay());
-  }, []);
-
-  useEffect(() => {
-    void loadSteps();
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void loadSteps();
-    });
-    return () => sub.remove();
-  }, [loadSteps]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -58,10 +46,10 @@ export function Chat() {
       ]);
     } finally {
       setLoading(false);
-      void loadSteps();
+      void refreshTodayStepsDisplay();
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
     }
-  }, [input, loading, messages, loadSteps]);
+  }, [input, loading, messages]);
 
   return (
     <KeyboardAvoidingView

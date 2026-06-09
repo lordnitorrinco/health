@@ -11,6 +11,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { exportDatabase, importDatabase } from '@/db/backup';
+import {
+  checkForUpdate,
+  downloadAndInstallUpdate,
+  getLocalVersionInfo,
+} from '@/services/appUpdate';
 import { getApiKey, setApiKey } from '@/storage/apiKey';
 
 export default function SettingsScreen() {
@@ -21,6 +26,10 @@ export default function SettingsScreen() {
   const [saved, setSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [downloadingUpdate, setDownloadingUpdate] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [versionLabel, setVersionLabel] = useState('');
 
   useEffect(() => {
     getApiKey().then((k) => {
@@ -29,6 +38,8 @@ export default function SettingsScreen() {
         setSaved(true);
       }
     });
+    const { version, versionCode } = getLocalVersionInfo();
+    setVersionLabel(`v${version} (${versionCode})`);
   }, []);
 
   async function save() {
@@ -81,6 +92,48 @@ export default function SettingsScreen() {
     }
   }
 
+  async function onCheckUpdate() {
+    setCheckingUpdate(true);
+    try {
+      const result = await checkForUpdate();
+      if (!result.available) {
+        Alert.alert(
+          'Actualización',
+          `Ya tienes la última versión (${result.local.version}).`,
+        );
+        return;
+      }
+
+      Alert.alert(
+        'Actualización disponible',
+        `Nueva versión ${result.remote.version} (build ${result.remote.versionCode}). Tienes ${result.local.version} (build ${result.local.versionCode}).`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Descargar e instalar', onPress: () => void onDownloadUpdate() },
+        ],
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido';
+      Alert.alert('Actualización', msg);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }
+
+  async function onDownloadUpdate() {
+    setDownloadingUpdate(true);
+    setDownloadProgress(0);
+    try {
+      await downloadAndInstallUpdate(setDownloadProgress);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido';
+      Alert.alert('Actualización', msg);
+    } finally {
+      setDownloadingUpdate(false);
+      setDownloadProgress(0);
+    }
+  }
+
   return (
     <View style={[styles.container, { paddingBottom: bottomPad }]}>
       <Text style={styles.label}>API key Anthropic</Text>
@@ -103,6 +156,30 @@ export default function SettingsScreen() {
       <TouchableOpacity style={styles.btn} onPress={save}>
         <Text style={styles.btnText}>{saved ? 'Actualizar' : 'Guardar'}</Text>
       </TouchableOpacity>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Actualización de la app</Text>
+        <Text style={styles.hint}>
+          Instala nuevas versiones encima de la actual sin borrar datos. Versión instalada:{' '}
+          {versionLabel || '…'}
+        </Text>
+        <TouchableOpacity
+          style={[styles.btn, styles.btnSecondary, checkingUpdate && styles.btnDisabled]}
+          onPress={onCheckUpdate}
+          disabled={checkingUpdate || downloadingUpdate}
+        >
+          {checkingUpdate ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Buscar actualización</Text>
+          )}
+        </TouchableOpacity>
+        {downloadingUpdate && (
+          <Text style={styles.progress}>
+            Descargando… {Math.round(downloadProgress * 100)}%
+          </Text>
+        )}
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.label}>Copia de seguridad</Text>
@@ -160,4 +237,5 @@ const styles = StyleSheet.create({
   btnSecondary: { backgroundColor: '#334155', marginTop: 8 },
   btnDanger: { backgroundColor: '#b45309', marginTop: 12 },
   btnDisabled: { opacity: 0.6 },
+  progress: { color: '#94a3b8', marginTop: 12, textAlign: 'center' },
 });

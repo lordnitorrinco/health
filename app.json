@@ -2,17 +2,19 @@
   "expo": {
     "name": "Health",
     "slug": "health",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "scheme": "health",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.lordnitorrinco.gym",
+      "versionCode": 2,
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.INTERNET",
-        "android.permission.health.READ_STEPS"
+        "android.permission.health.READ_STEPS",
+        "android.permission.REQUEST_INSTALL_PACKAGES"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#111827",
@@ -36,7 +38,8 @@
         }
       ],
       "expo-sharing",
-      "./plugins/withAndroidBuild.js"
+      "./plugins/withAndroidBuild.js",
+      "./plugins/withReleaseSigning.js"
     ],
     "experiments": {
       "typedRoutes": true

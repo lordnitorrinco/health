@@ -8,14 +8,33 @@ import {
   usesHealthConnectSync,
 } from './healthConnectSteps';
 
+const HC_POLL_MS = 20_000;
+const PEDOMETER_POLL_MS = 10_000;
+
+type StepsListener = (steps: number) => void;
+
 let subscription: EventSubscription | null = null;
 let baselineSteps = 0;
 let started = false;
 let healthConnectMode = false;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let appStateSub: { remove: () => void } | null = null;
+const listeners = new Set<StepsListener>();
+
+function notifySteps(steps: number) {
+  listeners.forEach((listener) => listener(steps));
+}
+
+export function subscribeTodaySteps(listener: StepsListener): () => void {
+  listeners.add(listener);
+  void getTodayStepsCount().then(listener);
+  return () => listeners.delete(listener);
+}
 
 async function persistToday(total: number) {
   if (total < 0) return;
   await upsertTodaySteps(total);
+  notifySteps(total);
 }
 
 async function syncFromWatch(watchSteps: number) {
@@ -23,6 +42,17 @@ async function syncFromWatch(watchSteps: number) {
   if (total >= baselineSteps) {
     await persistToday(total);
   }
+}
+
+async function syncAndNotify(): Promise<number> {
+  if (Platform.OS === 'android') {
+    if (healthConnectMode || usesHealthConnectSync()) {
+      await syncTodayStepsFromHealthConnect();
+    }
+  }
+  const steps = await getTodayStepsCount();
+  notifySteps(steps);
+  return steps;
 }
 
 async function startWatching() {
@@ -42,6 +72,43 @@ async function refreshBaseline() {
   baselineSteps = await getTodayStepsCount();
 }
 
+function stopPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = null;
+}
+
+function startPolling(intervalMs: number) {
+  stopPolling();
+  pollTimer = setInterval(() => {
+    void syncAndNotify();
+  }, intervalMs);
+}
+
+function onAppActive() {
+  void syncAndNotify();
+  startPolling(healthConnectMode ? HC_POLL_MS : PEDOMETER_POLL_MS);
+
+  if (!healthConnectMode) {
+    void refreshBaseline().then(() => startWatching());
+  }
+}
+
+function onAppInactive() {
+  stopPolling();
+  if (!healthConnectMode) stopWatching();
+}
+
+function bindAppStateSync() {
+  if (appStateSub) return;
+
+  appStateSub = AppState.addEventListener('change', (state: AppStateStatus) => {
+    if (state === 'active') onAppActive();
+    else onAppInactive();
+  });
+
+  if (AppState.currentState === 'active') onAppActive();
+}
+
 async function tryStartHealthConnectSync(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   if (!(await isHealthConnectAvailable())) return false;
@@ -50,6 +117,8 @@ async function tryStartHealthConnectSync(): Promise<boolean> {
   if (!synced) return false;
 
   healthConnectMode = true;
+  const steps = await getTodayStepsCount();
+  notifySteps(steps);
   return true;
 }
 
@@ -62,22 +131,7 @@ async function startPedometerFallback() {
 
   await refreshBaseline();
   await startWatching();
-}
-
-function bindAppStateSync() {
-  AppState.addEventListener('change', (state: AppStateStatus) => {
-    if (state !== 'active') {
-      if (!healthConnectMode) stopWatching();
-      return;
-    }
-
-    if (healthConnectMode || usesHealthConnectSync()) {
-      void syncTodayStepsFromHealthConnect();
-      return;
-    }
-
-    void refreshBaseline().then(() => startWatching());
-  });
+  notifySteps(await getTodayStepsCount());
 }
 
 export async function startStepTracker() {
@@ -94,8 +148,5 @@ export async function startStepTracker() {
 }
 
 export async function refreshTodayStepsDisplay(): Promise<number> {
-  if (Platform.OS === 'android') {
-    await syncTodayStepsFromHealthConnect();
-  }
-  return getTodayStepsCount();
+  return syncAndNotify();
 }
