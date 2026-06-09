@@ -10,6 +10,7 @@ import {
   type MealSlot,
 } from '@/db/schema';
 import { weekStartIso } from '@/tools/utils';
+import { addDaysYmd } from '@/utils/localDate';
 
 export type DayMeal = {
   id: number;
@@ -38,6 +39,9 @@ export type DayPlan = {
   weekStart: string;
   shoppingList: string | null;
   batchCooking: string | null;
+  nextWeekStart: string;
+  nextWeekShoppingList: string | null;
+  nextWeekBatchCooking: string | null;
 };
 
 const SLOT_LABELS: Record<MealSlot, string> = {
@@ -88,6 +92,8 @@ export async function getDayPlan(date: string): Promise<DayPlan> {
       .where(eq(schedule.date, date));
 
     const weekStart = weekStartIso(date);
+    const nextWeekStart = addDaysYmd(weekStart, 7);
+
     const [shop] = await db
       .select()
       .from(shoppingList)
@@ -96,6 +102,14 @@ export async function getDayPlan(date: string): Promise<DayPlan> {
       .select()
       .from(batchCooking)
       .where(eq(batchCooking.weekStart, weekStart));
+    const [nextShop] = await db
+      .select()
+      .from(shoppingList)
+      .where(eq(shoppingList.weekStart, nextWeekStart));
+    const [nextBatch] = await db
+      .select()
+      .from(batchCooking)
+      .where(eq(batchCooking.weekStart, nextWeekStart));
 
     return {
       date,
@@ -104,6 +118,9 @@ export async function getDayPlan(date: string): Promise<DayPlan> {
       weekStart,
       shoppingList: shop?.items ?? null,
       batchCooking: batch?.instructions ?? null,
+      nextWeekStart,
+      nextWeekShoppingList: nextShop?.items ?? null,
+      nextWeekBatchCooking: nextBatch?.instructions ?? null,
     };
   });
 }

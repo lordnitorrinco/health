@@ -24,6 +24,7 @@ import {
   addDaysYmd,
   diffDays,
   formatLongDate,
+  parseYmd,
   todayLocalYmd,
 } from '@/utils/localDate';
 
@@ -155,10 +156,16 @@ function DayPage({
 }) {
   const [plan, setPlan] = useState<DayPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showNextBatch, setShowNextBatch] = useState(false);
+  const [showNextList, setShowNextList] = useState(false);
+
+  const isSunday = parseYmd(date).getDay() === 0;
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setShowNextBatch(false);
+    setShowNextList(false);
     getDayPlan(date)
       .then((p) => {
         if (active) setPlan(p);
@@ -231,6 +238,48 @@ function DayPage({
         </>
       ) : null}
 
+      {isSunday && plan ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>
+            Preparar semana siguiente
+          </Text>
+          <View style={styles.toggleRow}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, showNextBatch && styles.toggleBtnActive]}
+              onPress={() => setShowNextBatch((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.toggleBtnText}>Batch</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, showNextList && styles.toggleBtnActive]}
+              onPress={() => setShowNextList((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.toggleBtnText}>Lista</Text>
+            </TouchableOpacity>
+          </View>
+
+          {showNextBatch ? (
+            <View style={styles.weekCard}>
+              <Text style={styles.weekCardLabel}>Batch cooking · semana siguiente</Text>
+              <Text style={styles.weekText}>
+                {plan.nextWeekBatchCooking ?? 'Sin batch cooking para la semana siguiente.'}
+              </Text>
+            </View>
+          ) : null}
+
+          {showNextList ? (
+            <View style={styles.weekCard}>
+              <Text style={styles.weekCardLabel}>Lista de la compra · semana siguiente</Text>
+              <Text style={styles.weekText}>
+                {plan.nextWeekShoppingList ?? 'Sin lista de la compra para la semana siguiente.'}
+              </Text>
+            </View>
+          ) : null}
+        </>
+      ) : null}
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -269,6 +318,19 @@ const styles = StyleSheet.create({
   mealCals: { color: '#64748b', fontSize: 13 },
   mealDesc: { color: '#e2e8f0', fontSize: 15, lineHeight: 21 },
   weekCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, marginTop: 10 },
+  weekCardLabel: { color: '#60a5fa', fontSize: 12, fontWeight: '700', marginBottom: 6 },
   weekText: { color: '#e2e8f0', fontSize: 14, lineHeight: 21 },
   empty: { color: '#64748b', fontSize: 14, marginTop: 10 },
+  toggleRow: { flexDirection: 'row', gap: 12, marginTop: 10 },
+  toggleBtn: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  toggleBtnActive: { backgroundColor: '#1d4ed8', borderColor: '#2563eb' },
+  toggleBtnText: { color: '#f1f5f9', fontSize: 15, fontWeight: '600' },
 });
