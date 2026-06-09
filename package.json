@@ -6,7 +6,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "prebuild": "expo prebuild --platform android",
-    "build:apk": "expo prebuild --platform android && cd android && ./gradlew assembleRelease"
+    "build:apk": "expo prebuild --platform android && cd android && CI=true NODE_ENV=production ./gradlew assembleRelease && cp app/build/outputs/apk/release/app-release.apk ../health-release.apk"
   },
   "dependencies": {
     "babel-plugin-module-resolver": "^5.0.3",
