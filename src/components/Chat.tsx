@@ -11,6 +11,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { runAgent, type ChatMessage } from '@/agent/loop';
@@ -57,6 +59,23 @@ export function Chat() {
   const [loading, setLoading] = useState(false);
   const stepsToday = useTodaySteps();
   const listRef = useRef<FlatList>(null);
+  const autoScrollRef = useRef(true);
+
+  const onScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+      const distanceFromBottom =
+        contentSize.height - (contentOffset.y + layoutMeasurement.height);
+      autoScrollRef.current = distanceFromBottom < 80;
+    },
+    [],
+  );
+
+  const onContentSizeChange = useCallback(() => {
+    if (autoScrollRef.current) {
+      listRef.current?.scrollToEnd({ animated: true });
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,6 +92,7 @@ export function Chat() {
     setMessages(nextHistory);
     setInput('');
     setLoading(true);
+    autoScrollRef.current = true;
 
     try {
       const reply = await runAgent(messages, text);
@@ -86,7 +106,6 @@ export function Chat() {
     } finally {
       setLoading(false);
       void refreshTodayStepsDisplay();
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
     }
   }, [input, loading, messages]);
 
@@ -110,7 +129,10 @@ export function Chat() {
         data={messages}
         keyExtractor={(_, i) => String(i)}
         contentContainerStyle={styles.list}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        onScroll={onScroll}
+        scrollEventThrottle={100}
+        onContentSizeChange={onContentSizeChange}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
           <View
             style={[
