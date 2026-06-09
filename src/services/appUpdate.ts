@@ -22,8 +22,16 @@ export function getLocalVersionInfo(): VersionInfo {
   };
 }
 
+function withCacheBust(url: string): string {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}t=${Date.now()}`;
+}
+
 export async function fetchRemoteVersionInfo(): Promise<VersionInfo | null> {
-  const res = await fetch(UPDATE_MANIFEST_URL, { cache: 'no-store' });
+  const res = await fetch(withCacheBust(UPDATE_MANIFEST_URL), {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+  });
   if (!res.ok) return null;
 
   const json = (await res.json()) as {
@@ -65,7 +73,7 @@ export async function downloadAndInstallUpdate(
   const target = `${FileSystem.cacheDirectory}health-update.apk`;
 
   const download = FileSystem.createDownloadResumable(
-    UPDATE_APK_URL,
+    withCacheBust(UPDATE_APK_URL),
     target,
     {},
     (progress) => {

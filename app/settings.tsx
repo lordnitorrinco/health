@@ -99,7 +99,8 @@ export default function SettingsScreen() {
       if (!result.available) {
         Alert.alert(
           'Actualización',
-          `Ya tienes la última versión (${result.local.version}).`,
+          `Instalada: ${result.local.version} (build ${result.local.versionCode}).\n` +
+            `Remota: ${result.remote.version} (build ${result.remote.versionCode}).`,
         );
         return;
       }
