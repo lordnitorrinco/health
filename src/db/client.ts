@@ -11,6 +11,7 @@ export const DB_NAME = 'health.db';
 let _sqlite: SQLiteDatabase | null = null;
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 let dbQueue: Promise<void> = Promise.resolve();
+let dbTaskDepth = 0;
 
 function openConnection() {
   const sqlite = openDatabaseSync(DB_NAME);
@@ -39,9 +40,28 @@ export function getSqlite(): SQLiteDatabase {
   return ensureConnection().sqlite;
 }
 
-/** Serializa accesos async para evitar NullPointerException en NativeDatabase. */
+/** Serializa accesos async; reentrante para evitar deadlock tool → stepCount. */
 export function runWithDb<T>(fn: () => T | Promise<T>): Promise<T> {
-  const task = dbQueue.then(fn, fn);
+  if (dbTaskDepth > 0) {
+    return Promise.resolve().then(fn);
+  }
+
+  const task = dbQueue.then(async () => {
+    dbTaskDepth++;
+    try {
+      return await fn();
+    } finally {
+      dbTaskDepth--;
+    }
+  }, async () => {
+    dbTaskDepth++;
+    try {
+      return await fn();
+    } finally {
+      dbTaskDepth--;
+    }
+  });
+
   dbQueue = task.then(
     () => undefined,
     () => undefined,
