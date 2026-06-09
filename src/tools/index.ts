@@ -8,6 +8,7 @@ import * as intake from './handlers/intake';
 import * as bodyMetrics from './handlers/bodyMetrics';
 import * as stepCount from './handlers/stepCount';
 import * as analytics from './handlers/analytics';
+import { runWithDb } from '@/db/client';
 import { getDailyCalorieTarget } from './handlers/intake';
 import { toolErr, toolOk } from './utils';
 
@@ -78,7 +79,7 @@ export async function executeTool(name: string, input: Record<string, unknown>):
   const handler = handlers[name];
   if (!handler) return toolErr(`tool desconocida: ${name}`);
   try {
-    return await handler(input);
+    return await runWithDb(() => handler(input));
   } catch (e) {
     return toolErr(e instanceof Error ? e.message : 'error ejecutando tool');
   }

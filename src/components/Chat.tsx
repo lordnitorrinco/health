@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -24,6 +25,12 @@ export function Chat() {
   const [loading, setLoading] = useState(false);
   const stepsToday = useTodaySteps();
   const listRef = useRef<FlatList>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshTodayStepsDisplay();
+    }, []),
+  );
 
   const send = useCallback(async () => {
     const text = input.trim();

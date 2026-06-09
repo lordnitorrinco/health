@@ -2,13 +2,15 @@ import { Stack, Link } from 'expo-router';
 import { useEffect } from 'react';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { runMigrations } from '@/db/migrate';
+import { initDatabase } from '@/db/client';
 import { startStepTracker } from '@/services/stepTracker';
 
 export default function RootLayout() {
   useEffect(() => {
-    runMigrations();
-    void startStepTracker();
+    void (async () => {
+      initDatabase();
+      await startStepTracker();
+    })();
   }, []);
 
   return (
