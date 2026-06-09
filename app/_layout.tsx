@@ -1,6 +1,6 @@
 import { Stack, Link } from 'expo-router';
 import { useEffect } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initDatabase } from '@/db/client';
 import { startStepTracker } from '@/services/stepTracker';
@@ -27,12 +27,18 @@ export default function RootLayout() {
           options={{
             title: 'Health',
             headerRight: () => (
-              <Link href="/settings">
-                <Text style={{ color: '#60a5fa', fontSize: 22, paddingHorizontal: 8 }}>⚙</Text>
-              </Link>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Link href="/day">
+                  <Text style={{ color: '#60a5fa', fontSize: 22, paddingHorizontal: 8 }}>📅</Text>
+                </Link>
+                <Link href="/settings">
+                  <Text style={{ color: '#60a5fa', fontSize: 22, paddingHorizontal: 8 }}>⚙</Text>
+                </Link>
+              </View>
             ),
           }}
         />
+        <Stack.Screen name="day" options={{ title: 'Día' }} />
         <Stack.Screen name="settings" options={{ title: 'Ajustes' }} />
       </Stack>
     </SafeAreaProvider>

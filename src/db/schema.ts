@@ -128,3 +128,4 @@ export { dailySteps } from './dailyStepsSchema';
 export { chatMessages } from './chatSchema';
 export { supplements, supplementIntake } from './supplementsSchema';
 export { batchCooking } from './batchCookingSchema';
+export { shoppingList } from './shoppingListSchema';

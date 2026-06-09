@@ -1,0 +1,274 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  ActivityIndicator,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { CalendarModal } from './CalendarModal';
+import { ExerciseBreakdownModal } from './ExerciseBreakdownModal';
+import {
+  getDayPlan,
+  mealSlotLabel,
+  type DayPlan,
+  type DayWorkout,
+} from '@/services/dayView';
+import {
+  addDaysYmd,
+  diffDays,
+  formatLongDate,
+  todayLocalYmd,
+} from '@/utils/localDate';
+
+const RANGE = 365;
+const TOTAL = RANGE * 2 + 1;
+
+function indexToDate(baseToday: string, index: number): string {
+  return addDaysYmd(baseToday, index - RANGE);
+}
+
+function dateToIndex(baseToday: string, date: string): number {
+  return RANGE + diffDays(baseToday, date);
+}
+
+export function DayView() {
+  const { width } = useWindowDimensions();
+  const listRef = useRef<FlatList>(null);
+  const baseTodayRef = useRef(todayLocalYmd());
+  const baseToday = baseTodayRef.current;
+
+  const [selectedDate, setSelectedDate] = useState(baseToday);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [workoutModal, setWorkoutModal] = useState<DayWorkout | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      setReloadKey((k) => k + 1);
+    }, []),
+  );
+
+  const goToDate = useCallback(
+    (date: string) => {
+      setSelectedDate(date);
+      const index = dateToIndex(baseToday, date);
+      if (index >= 0 && index < TOTAL) {
+        listRef.current?.scrollToIndex({ index, animated: false });
+      }
+    },
+    [baseToday],
+  );
+
+  const onCalendarSelect = useCallback(
+    (date: string) => {
+      setCalendarOpen(false);
+      goToDate(date);
+    },
+    [goToDate],
+  );
+
+  const onMomentumEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const index = Math.round(e.nativeEvent.contentOffset.x / width);
+      setSelectedDate(indexToDate(baseToday, index));
+    },
+    [baseToday, width],
+  );
+
+  const getItemLayout = useCallback(
+    (_: unknown, index: number) => ({
+      length: width,
+      offset: width * index,
+      index,
+    }),
+    [width],
+  );
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.dateSelector}
+        onPress={() => setCalendarOpen(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.dateText}>{formatLongDate(selectedDate)}</Text>
+        <Text style={styles.dateHint}>
+          {selectedDate === baseToday ? 'Hoy · toca para elegir' : 'Toca para elegir fecha'}
+        </Text>
+      </TouchableOpacity>
+
+      <FlatList
+        ref={listRef}
+        data={Array.from({ length: TOTAL })}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={RANGE}
+        getItemLayout={getItemLayout}
+        keyExtractor={(_, i) => String(i)}
+        onMomentumScrollEnd={onMomentumEnd}
+        windowSize={3}
+        initialNumToRender={1}
+        maxToRenderPerBatch={2}
+        renderItem={({ index }) => (
+          <DayPage
+            date={indexToDate(baseToday, index)}
+            width={width}
+            reloadKey={reloadKey}
+            onOpenWorkout={setWorkoutModal}
+          />
+        )}
+      />
+
+      <CalendarModal
+        visible={calendarOpen}
+        selectedDate={selectedDate}
+        onSelect={onCalendarSelect}
+        onClose={() => setCalendarOpen(false)}
+      />
+
+      <ExerciseBreakdownModal
+        workout={workoutModal}
+        onClose={() => setWorkoutModal(null)}
+      />
+    </View>
+  );
+}
+
+function DayPage({
+  date,
+  width,
+  reloadKey,
+  onOpenWorkout,
+}: {
+  date: string;
+  width: number;
+  reloadKey: number;
+  onOpenWorkout: (w: DayWorkout) => void;
+}) {
+  const [plan, setPlan] = useState<DayPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getDayPlan(date)
+      .then((p) => {
+        if (active) setPlan(p);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [date, reloadKey]);
+
+  return (
+    <ScrollView style={{ width }} contentContainerStyle={styles.page}>
+      <Text style={styles.sectionTitle}>Entrenamiento</Text>
+      {plan?.workout ? (
+        <TouchableOpacity
+          style={styles.workoutCard}
+          onPress={() => onOpenWorkout(plan.workout!)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.workoutName}>{plan.workout.routineName}</Text>
+          <Text style={styles.workoutHint}>Ver ejercicios ›</Text>
+        </TouchableOpacity>
+      ) : (
+        <Text style={styles.empty}>Sin entrenamiento asignado.</Text>
+      )}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Menú del día</Text>
+      {loading && !plan ? (
+        <ActivityIndicator color="#60a5fa" style={{ marginTop: 12 }} />
+      ) : plan && plan.meals.length > 0 ? (
+        plan.meals.map((m) => (
+          <View key={m.id} style={styles.mealCard}>
+            <View style={styles.mealHeader}>
+              <Text style={styles.mealSlot}>{mealSlotLabel(m.slot)}</Text>
+              <View style={styles.mealMeta}>
+                {m.time ? <Text style={styles.mealTime}>{m.time}</Text> : null}
+                {m.calories != null ? (
+                  <Text style={styles.mealCals}>{m.calories} kcal</Text>
+                ) : null}
+              </View>
+            </View>
+            <Text style={styles.mealDesc}>{m.description}</Text>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.empty}>Sin comidas planificadas.</Text>
+      )}
+
+      {plan?.shoppingList ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>
+            Lista de la compra (semana)
+          </Text>
+          <View style={styles.weekCard}>
+            <Text style={styles.weekText}>{plan.shoppingList}</Text>
+          </View>
+        </>
+      ) : null}
+
+      {plan?.batchCooking ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>
+            Batch cooking (semana)
+          </Text>
+          <View style={styles.weekCard}>
+            <Text style={styles.weekText}>{plan.batchCooking}</Text>
+          </View>
+        </>
+      ) : null}
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0f172a' },
+  dateSelector: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+    backgroundColor: '#111827',
+  },
+  dateText: { color: '#f8fafc', fontSize: 18, fontWeight: '700', textTransform: 'capitalize' },
+  dateHint: { color: '#64748b', fontSize: 12, marginTop: 2 },
+  page: { padding: 16 },
+  sectionTitle: { color: '#94a3b8', fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionSpacing: { marginTop: 24 },
+  workoutCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  workoutName: { color: '#f8fafc', fontSize: 17, fontWeight: '600', flex: 1 },
+  workoutHint: { color: '#60a5fa', fontSize: 14 },
+  mealCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, marginTop: 10 },
+  mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  mealSlot: { color: '#60a5fa', fontSize: 13, fontWeight: '700' },
+  mealMeta: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  mealTime: { color: '#cbd5e1', fontSize: 13, fontWeight: '600' },
+  mealCals: { color: '#64748b', fontSize: 13 },
+  mealDesc: { color: '#e2e8f0', fontSize: 15, lineHeight: 21 },
+  weekCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, marginTop: 10 },
+  weekText: { color: '#e2e8f0', fontSize: 14, lineHeight: 21 },
+  empty: { color: '#64748b', fontSize: 14, marginTop: 10 },
+});

@@ -118,6 +118,12 @@ CREATE TABLE IF NOT EXISTS batch_cooking (
   instructions TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS shopping_list (
+  week_start TEXT PRIMARY KEY,
+  items TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `;
 
 // Migraciones de columnas para BBDD ya existentes. SQLite no soporta

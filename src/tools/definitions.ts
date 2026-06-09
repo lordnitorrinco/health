@@ -267,6 +267,21 @@ export const toolDefinitions: Tool[] = [
     week_start: { type: 'string' },
   }),
 
+  tool('set_shopping_list', 'Guarda la lista de la compra de una semana. week_start opcional (se normaliza al lunes); por defecto la semana actual.', {
+    items: { type: 'string' },
+    week_start: { type: 'string' },
+  }, ['items']),
+  tool('get_shopping_list', 'Lista de la compra de una semana (por defecto la actual).', {
+    week_start: { type: 'string' },
+  }),
+  tool('list_shopping_lists', 'Lista de compras guardadas; opcionalmente en un rango de fechas.', {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  }),
+  tool('delete_shopping_list', 'Elimina la lista de la compra de una semana.', {
+    week_start: { type: 'string' },
+  }),
+
   tool('get_today_context', 'Contexto de hoy: calendario, sesión, comidas, pasos.', {}),
   tool('get_exercise_progression', 'Progresión de ejercicio o grupo muscular.', {
     exercise_name: { type: 'string' },
