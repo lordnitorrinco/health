@@ -11,6 +11,7 @@ const HC_POLL_MS = 8_000;
 const PEDOMETER_POLL_MS = 5_000;
 
 type StepsListener = (steps: number) => void;
+type StepSource = 'none' | 'pedometer' | 'health-connect';
 
 let subscription: EventSubscription | null = null;
 let baselineSteps = 0;
@@ -21,7 +22,28 @@ let appStateSub: { remove: () => void } | null = null;
 let lastNotifiedSteps = -1;
 const listeners = new Set<StepsListener>();
 
+// Diagnóstico observable desde la UI.
+const status = {
+  source: 'none' as StepSource,
+  pedometerAvailable: false,
+  pedometerPermission: false,
+  healthConnectAvailable: false,
+  watchEvents: 0,
+  lastWatchSteps: 0,
+  baseline: 0,
+  current: 0,
+  lastUpdate: 0,
+};
+
+export type StepTrackerStatus = typeof status;
+
+export function getStepTrackerStatus(): StepTrackerStatus {
+  return { ...status };
+}
+
 function notifySteps(steps: number) {
+  status.current = steps;
+  status.lastUpdate = Date.now();
   if (steps === lastNotifiedSteps) return;
   lastNotifiedSteps = steps;
   listeners.forEach((listener) => listener(steps));
@@ -32,6 +54,7 @@ export function subscribeTodaySteps(listener: StepsListener): () => void {
   void getTodayStepsCount().then((steps) => {
     listener(steps);
     lastNotifiedSteps = steps;
+    status.current = steps;
   });
   return () => listeners.delete(listener);
 }
@@ -46,20 +69,28 @@ async function persistToday(total: number) {
   }
 }
 
-async function syncFromWatch(watchSteps: number) {
+function onWatchEvent(watchSteps: number) {
+  status.watchEvents++;
+  status.lastWatchSteps = watchSteps;
+  status.source = healthConnectMode ? 'health-connect' : 'pedometer';
+
   const total = baselineSteps + watchSteps;
-  if (total >= baselineSteps) {
-    await persistToday(total);
-  }
+  // Actualización inmediata en pantalla, sin esperar a SQLite.
+  if (total >= 0) notifySteps(total);
+  void persistToday(total);
 }
 
 async function syncHealthConnectIfAvailable(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   if (!(await isHealthConnectAvailable())) return false;
 
+  status.healthConnectAvailable = true;
   try {
     const synced = await syncTodayStepsFromHealthConnect();
-    if (synced) healthConnectMode = true;
+    if (synced) {
+      healthConnectMode = true;
+      status.source = 'health-connect';
+    }
     return synced;
   } catch {
     return false;
@@ -77,11 +108,10 @@ export async function syncAndNotify(): Promise<number> {
   }
 }
 
-async function startWatching() {
+function startWatching() {
   if (subscription) return;
-
   subscription = Pedometer.watchStepCount((result) => {
-    void syncFromWatch(result.steps);
+    onWatchEvent(result.steps);
   });
 }
 
@@ -92,6 +122,7 @@ function stopWatching() {
 
 async function refreshBaseline() {
   baselineSteps = await getTodayStepsCount();
+  status.baseline = baselineSteps;
 }
 
 function stopPolling() {
@@ -110,10 +141,17 @@ function ensurePollingRunning() {
   startPolling(healthConnectMode ? HC_POLL_MS : PEDOMETER_POLL_MS);
 }
 
+// Recrea la suscripción para que watchSteps cuente desde la nueva baseline.
+async function restartWatching() {
+  stopWatching();
+  await refreshBaseline();
+  startWatching();
+}
+
 function onAppActive() {
   void syncAndNotify();
   ensurePollingRunning();
-  void refreshBaseline().then(() => startWatching());
+  if (status.pedometerPermission) void restartWatching();
 }
 
 function onAppInactive() {
@@ -123,22 +161,27 @@ function onAppInactive() {
 
 function bindAppStateSync() {
   if (appStateSub) return;
-
   appStateSub = AppState.addEventListener('change', (state: AppStateStatus) => {
     if (state === 'active') onAppActive();
     else onAppInactive();
   });
 }
 
-async function startPedometerFallback() {
-  const available = await Pedometer.isAvailableAsync();
-  if (!available) return;
+async function startPedometer() {
+  try {
+    status.pedometerAvailable = await Pedometer.isAvailableAsync();
+    if (!status.pedometerAvailable) return;
 
-  const perm = await Pedometer.requestPermissionsAsync();
-  if (!perm.granted) return;
+    const perm = await Pedometer.requestPermissionsAsync();
+    status.pedometerPermission = perm.granted;
+    if (!perm.granted) return;
 
-  await refreshBaseline();
-  await startWatching();
+    await refreshBaseline();
+    startWatching();
+    if (status.source === 'none') status.source = 'pedometer';
+  } catch {
+    status.pedometerAvailable = false;
+  }
 }
 
 export async function startStepTracker() {
@@ -148,14 +191,10 @@ export async function startStepTracker() {
   bindAppStateSync();
 
   await syncHealthConnectIfAvailable();
-  await startPedometerFallback();
+  await startPedometer();
 
   await syncAndNotify();
   ensurePollingRunning();
-
-  if (AppState.currentState === 'active') {
-    void refreshBaseline().then(() => startWatching());
-  }
 }
 
 export async function refreshTodayStepsDisplay(): Promise<number> {

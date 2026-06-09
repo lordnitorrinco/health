@@ -10,11 +10,43 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { runAgent, type ChatMessage } from '@/agent/loop';
 import { useTodaySteps } from '@/hooks/useTodaySteps';
-import { refreshTodayStepsDisplay } from '@/services/stepTracker';
+import {
+  getStepTrackerStatus,
+  refreshTodayStepsDisplay,
+} from '@/services/stepTracker';
+
+function showStepDiagnostics() {
+  const s = getStepTrackerStatus();
+  const sourceLabel =
+    s.source === 'health-connect'
+      ? 'Health Connect'
+      : s.source === 'pedometer'
+        ? 'Podómetro (sensor)'
+        : 'Ninguna';
+  const last =
+    s.lastUpdate > 0
+      ? `${Math.round((Date.now() - s.lastUpdate) / 1000)}s atrás`
+      : 'nunca';
+  Alert.alert(
+    'Diagnóstico de pasos',
+    [
+      `Fuente activa: ${sourceLabel}`,
+      `Podómetro disponible: ${s.pedometerAvailable ? 'sí' : 'no'}`,
+      `Permiso podómetro: ${s.pedometerPermission ? 'concedido' : 'no'}`,
+      `Health Connect: ${s.healthConnectAvailable ? 'sí' : 'no'}`,
+      `Eventos del sensor: ${s.watchEvents}`,
+      `Último delta sensor: ${s.lastWatchSteps}`,
+      `Base (BBDD): ${s.baseline}`,
+      `Total actual: ${s.current}`,
+      `Última actualización: ${last}`,
+    ].join('\n'),
+  );
+}
 
 export function Chat() {
   const insets = useSafeAreaInsets();
@@ -64,9 +96,15 @@ export function Chat() {
       behavior={Platform.OS === 'android' ? 'height' : 'padding'}
       keyboardVerticalOffset={80}
     >
-      <View style={styles.stepsBar}>
-        <Text style={styles.stepsText}>Pasos hoy: {stepsToday.toLocaleString('es-ES')}</Text>
-      </View>
+      <TouchableOpacity
+        style={styles.stepsBar}
+        onPress={showStepDiagnostics}
+        activeOpacity={0.6}
+      >
+        <Text style={styles.stepsText}>
+          Pasos hoy: {stepsToday.toLocaleString('es-ES')}
+        </Text>
+      </TouchableOpacity>
       <FlatList
         ref={listRef}
         data={messages}
