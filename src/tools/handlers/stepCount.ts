@@ -1,7 +1,33 @@
 import { eq, gte, lte, and } from 'drizzle-orm';
 import { getDb, runWithDb } from '@/db/client';
-import { dailySteps } from '@/db/schema';
+import { dailySteps, settings } from '@/db/schema';
 import { nowIso, todayIso, toolErr, toolOk } from '../utils';
+
+const STEPS_GOAL_KEY = 'daily_steps_goal';
+
+export async function setDailyStepsGoal(input: { steps: number }) {
+  if (input.steps < 0) return toolErr('steps debe ser >= 0');
+  return runWithDb(async () => {
+    const value = String(Math.round(input.steps));
+    await getDb()
+      .insert(settings)
+      .values({ key: STEPS_GOAL_KEY, value })
+      .onConflictDoUpdate({ target: settings.key, set: { value } });
+    return toolOk({ daily_steps_goal: Math.round(input.steps) });
+  });
+}
+
+export async function getDailyStepsGoalValue(): Promise<number | null> {
+  return runWithDb(async () => {
+    const [row] = await getDb().select().from(settings).where(eq(settings.key, STEPS_GOAL_KEY));
+    return row ? Number(row.value) : null;
+  });
+}
+
+export async function getDailyStepsGoal() {
+  const goal = await getDailyStepsGoalValue();
+  return toolOk({ daily_steps_goal: goal });
+}
 
 export async function getStepsForDay(input: { date?: string }) {
   return runWithDb(async () => {

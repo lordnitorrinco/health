@@ -12,8 +12,9 @@ import {
 import { getActiveSession } from './sessions';
 import { getDailyCalorieTarget } from './intake';
 import { sumPlannedCalories } from './meals';
-import { todayIso, toolOk } from '../utils';
-import { getTodayStepsCount } from './stepCount';
+import { dayEnd, dayStart, todayIso, toolOk } from '../utils';
+import { getTodayStepsCount, getDailyStepsGoalValue } from './stepCount';
+import { supplements, supplementIntake } from '@/db/schema';
 
 export async function getTodayContext(_input: Record<string, never>) {
   const date = todayIso();
@@ -71,6 +72,20 @@ export async function getTodayContext(_input: Record<string, never>) {
   const target = await getDailyCalorieTarget();
   const plannedCal = await sumPlannedCalories(date);
   const stepsToday = await getTodayStepsCount();
+  const stepsGoal = await getDailyStepsGoalValue();
+
+  const activeSupplements = (
+    await getDb().select().from(supplements)
+  ).filter((s) => s.active === 1);
+  const supplementsTakenToday = await getDb()
+    .select()
+    .from(supplementIntake)
+    .where(
+      and(
+        gte(supplementIntake.takenAt, dayStart(date)),
+        lte(supplementIntake.takenAt, dayEnd(date))
+      )
+    );
 
   return toolOk({
     date,
@@ -81,6 +96,10 @@ export async function getTodayContext(_input: Record<string, never>) {
     daily_calorie_target: target,
     planned_calories_today: plannedCal,
     steps_today: stepsToday,
+    daily_steps_goal: stepsGoal,
+    steps_goal_reached: stepsGoal !== null ? stepsToday >= stepsGoal : null,
+    active_supplements: activeSupplements,
+    supplements_taken_today: supplementsTakenToday,
   });
 }
 

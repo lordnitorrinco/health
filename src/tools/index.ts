@@ -7,6 +7,7 @@ import * as meals from './handlers/meals';
 import * as intake from './handlers/intake';
 import * as bodyMetrics from './handlers/bodyMetrics';
 import * as stepCount from './handlers/stepCount';
+import * as supplements from './handlers/supplements';
 import * as analytics from './handlers/analytics';
 import { runWithDb } from '@/db/client';
 import { getDailyCalorieTarget } from './handlers/intake';
@@ -69,6 +70,16 @@ const handlers: Record<string, Handler> = {
   add_daily_steps: (i) => stepCount.addDailySteps(i as never),
   list_daily_steps: (i) => stepCount.listDailySteps(i as never),
   get_steps_progression: (i) => stepCount.getStepsProgression(i as never),
+  set_daily_steps_goal: (i) => stepCount.setDailyStepsGoal(i as never),
+  get_daily_steps_goal: () => stepCount.getDailyStepsGoal(),
+
+  list_supplements: (i) => supplements.listSupplements(i as never),
+  create_supplement: (i) => supplements.createSupplement(i as never),
+  update_supplement: (i) => supplements.updateSupplement(i as never),
+  delete_supplement: (i) => supplements.deleteSupplement(i as never),
+  log_supplement_intake: (i) => supplements.logSupplementIntake(i as never),
+  list_supplement_intake: (i) => supplements.listSupplementIntake(i as never),
+  delete_supplement_intake: (i) => supplements.deleteSupplementIntake(i as never),
 
   get_today_context: () => analytics.getTodayContext({}),
   get_exercise_progression: (i) => analytics.getExerciseProgression(i as never),

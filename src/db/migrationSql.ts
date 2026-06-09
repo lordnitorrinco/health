@@ -91,4 +91,24 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS chat_messages_created_idx ON chat_messages(created_at);
+
+CREATE TABLE IF NOT EXISTS supplements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  dose TEXT,
+  schedule TEXT,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS supplement_intake (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  supplement_id INTEGER NOT NULL REFERENCES supplements(id) ON DELETE CASCADE,
+  taken_at TEXT NOT NULL,
+  dose TEXT,
+  notes TEXT
+);
+CREATE INDEX IF NOT EXISTS supplement_intake_supp_idx ON supplement_intake(supplement_id);
+CREATE INDEX IF NOT EXISTS supplement_intake_taken_idx ON supplement_intake(taken_at);
 `;

@@ -125,3 +125,4 @@ export const MEAL_SLOTS: MealSlot[] = [
 
 export { dailySteps } from './dailyStepsSchema';
 export { chatMessages } from './chatSchema';
+export { supplements, supplementIntake } from './supplementsSchema';

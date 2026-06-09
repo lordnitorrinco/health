@@ -213,6 +213,42 @@ export const toolDefinitions: Tool[] = [
     from: { type: 'string' },
     to: { type: 'string' },
   }, ['from', 'to']),
+  tool('set_daily_steps_goal', 'Define el objetivo de pasos diarios.', {
+    steps: { type: 'number' },
+  }, ['steps']),
+  tool('get_daily_steps_goal', 'Obtiene el objetivo de pasos diarios.', {}),
+
+  tool('list_supplements', 'Lista suplementos deportivos. include_inactive para incluir los desactivados.', {
+    include_inactive: { type: 'boolean' },
+  }),
+  tool('create_supplement', 'Crea un suplemento con dosis (cantidad) y periodicidad.', {
+    name: { type: 'string' },
+    dose: { type: 'string' },
+    schedule: { type: 'string' },
+    notes: { type: 'string' },
+  }, ['name']),
+  tool('update_supplement', 'Actualiza un suplemento (cantidad, periodicidad, notas, activo).', {
+    id: { type: 'number' },
+    name: { type: 'string' },
+    dose: { type: 'string' },
+    schedule: { type: 'string' },
+    notes: { type: 'string' },
+    active: { type: 'boolean' },
+  }, ['id']),
+  tool('delete_supplement', 'Elimina un suplemento y sus tomas.', { id: { type: 'number' } }, ['id']),
+  tool('log_supplement_intake', 'Registra una toma de suplemento. Indica supplement_id o supplement_name.', {
+    supplement_id: { type: 'number' },
+    supplement_name: { type: 'string' },
+    taken_at: { type: 'string' },
+    dose: { type: 'string' },
+    notes: { type: 'string' },
+  }),
+  tool('list_supplement_intake', 'Tomas de suplementos en un rango de fechas.', {
+    from: { type: 'string' },
+    to: { type: 'string' },
+    supplement_id: { type: 'number' },
+  }, ['from', 'to']),
+  tool('delete_supplement_intake', 'Elimina una toma de suplemento.', { id: { type: 'number' } }, ['id']),
 
   tool('get_today_context', 'Contexto de hoy: calendario, sesión, comidas, pasos.', {}),
   tool('get_exercise_progression', 'Progresión de ejercicio o grupo muscular.', {
