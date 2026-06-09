@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View,
@@ -21,6 +21,11 @@ import {
   getStepTrackerStatus,
   refreshTodayStepsDisplay,
 } from '@/services/stepTracker';
+import {
+  appendChatMessage,
+  loadChatHistory,
+  trimChatHistory,
+} from '@/services/chatHistory';
 
 function showStepDiagnostics() {
   const s = getStepTrackerStatus();
@@ -61,6 +66,14 @@ export function Chat() {
   const listRef = useRef<FlatList>(null);
   const autoScrollRef = useRef(true);
 
+  useEffect(() => {
+    loadChatHistory()
+      .then((history) => {
+        if (history.length) setMessages(history);
+      })
+      .catch(() => {});
+  }, []);
+
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -93,16 +106,22 @@ export function Chat() {
     setInput('');
     setLoading(true);
     autoScrollRef.current = true;
+    void appendChatMessage(userMsg);
 
     try {
       const reply = await runAgent(messages, text);
-      setMessages([...nextHistory, { role: 'assistant', content: reply }]);
+      const assistantMsg: ChatMessage = { role: 'assistant', content: reply };
+      setMessages([...nextHistory, assistantMsg]);
+      await appendChatMessage(assistantMsg);
+      void trimChatHistory();
     } catch (e) {
       const err = e instanceof Error ? e.message : 'Error desconocido';
-      setMessages([
-        ...nextHistory,
-        { role: 'assistant', content: `Error: ${err}` },
-      ]);
+      const errorMsg: ChatMessage = {
+        role: 'assistant',
+        content: `Error: ${err}`,
+      };
+      setMessages([...nextHistory, errorMsg]);
+      void appendChatMessage(errorMsg);
     } finally {
       setLoading(false);
       void refreshTodayStepsDisplay();

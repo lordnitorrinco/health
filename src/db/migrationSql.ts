@@ -83,4 +83,12 @@ CREATE TABLE IF NOT EXISTS daily_steps (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS daily_steps_date_idx ON daily_steps(date);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS chat_messages_created_idx ON chat_messages(created_at);
 `;
