@@ -32,6 +32,9 @@ export function ExerciseBreakdownModal({ workout, onClose }: Props) {
       .then((rows) => {
         if (active) setExercises(rows);
       })
+      .catch(() => {
+        if (active) setExercises([]);
+      })
       .finally(() => {
         if (active) setLoading(false);
       });

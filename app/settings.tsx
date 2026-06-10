@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { exportDatabase, importDatabase } from '@/db/backup';
+import { clearChatHistory } from '@/services/chatHistory';
 import {
   checkForUpdate,
   downloadAndInstallUpdate,
@@ -90,6 +91,29 @@ export default function SettingsScreen() {
     } finally {
       setImporting(false);
     }
+  }
+
+  function onClearChat() {
+    Alert.alert(
+      'Borrar conversación',
+      'Se eliminará todo el historial del chat. Tus datos (rutinas, dieta, pasos, suplementos…) no se tocan.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Borrar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearChatHistory();
+              Alert.alert('Conversación borrada', 'El historial del chat se ha eliminado.');
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Error desconocido';
+              Alert.alert('Borrar conversación', msg);
+            }
+          },
+        },
+      ],
+    );
   }
 
   async function onCheckUpdate() {
@@ -209,6 +233,16 @@ export default function SettingsScreen() {
           ) : (
             <Text style={styles.btnText}>Importar backup</Text>
           )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Conversación</Text>
+        <Text style={styles.hint}>
+          Borra el historial del chat. No afecta a tus datos de rutinas, dieta ni pasos.
+        </Text>
+        <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={onClearChat}>
+          <Text style={styles.btnText}>Borrar conversación</Text>
         </TouchableOpacity>
       </View>
     </View>

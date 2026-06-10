@@ -137,14 +137,15 @@ export async function getExerciseProgression(input: {
     return toolOk({ sessions: [], message: 'sin ejercicios coincidentes' });
   }
 
-  const fromTs = input.from + 'T00:00:00.000Z';
-  const toTs = input.to + 'T23:59:59.999Z';
+  const fromTs = dayStart(input.from);
+  const toTs = dayEnd(input.to);
 
   const rows = await getDb()
     .select({
       setId: sets.id,
       weightKg: sets.weightKg,
       reps: sets.reps,
+      repWeights: sets.repWeights,
       loggedAt: sets.loggedAt,
       exerciseName: exercises.name,
       sessionId: sets.sessionId,
@@ -163,12 +164,24 @@ export async function getExerciseProgression(input: {
     )
     .orderBy(asc(sets.loggedAt));
 
+  const setVolume = (r: { weightKg: number; reps: number; repWeights: string | null }): number => {
+    if (r.repWeights) {
+      try {
+        const arr = JSON.parse(r.repWeights);
+        if (Array.isArray(arr)) return arr.reduce((s, w) => s + Number(w), 0);
+      } catch {
+        /* usa fallback */
+      }
+    }
+    return r.weightKg * r.reps;
+  };
+
   const byDate: Record<string, { maxWeight: number; totalVolume: number; sets: typeof rows }> = {};
   for (const r of rows) {
     const d = r.loggedAt.slice(0, 10);
     if (!byDate[d]) byDate[d] = { maxWeight: 0, totalVolume: 0, sets: [] };
     byDate[d].maxWeight = Math.max(byDate[d].maxWeight, r.weightKg);
-    byDate[d].totalVolume += r.weightKg * r.reps;
+    byDate[d].totalVolume += setVolume(r);
     byDate[d].sets.push(r);
   }
 
@@ -183,8 +196,8 @@ export async function getExerciseProgression(input: {
 }
 
 export async function getBodyMetricsProgression(input: { from: string; to: string }) {
-  const fromTs = input.from + 'T00:00:00.000Z';
-  const toTs = input.to + 'T23:59:59.999Z';
+  const fromTs = dayStart(input.from);
+  const toTs = dayEnd(input.to);
   const rows = await getDb()
     .select()
     .from(bodyMetrics)

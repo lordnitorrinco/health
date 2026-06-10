@@ -52,6 +52,7 @@ export function DayView() {
 
   useFocusEffect(
     useCallback(() => {
+      baseTodayRef.current = todayLocalYmd();
       setReloadKey((k) => k + 1);
     }, []),
   );
@@ -115,6 +116,11 @@ export function DayView() {
         getItemLayout={getItemLayout}
         keyExtractor={(_, i) => String(i)}
         onMomentumScrollEnd={onMomentumEnd}
+        onScrollToIndexFailed={({ index }) => {
+          setTimeout(() => {
+            listRef.current?.scrollToIndex({ index, animated: false });
+          }, 50);
+        }}
         windowSize={3}
         initialNumToRender={1}
         maxToRenderPerBatch={2}
@@ -169,6 +175,9 @@ function DayPage({
     getDayPlan(date)
       .then((p) => {
         if (active) setPlan(p);
+      })
+      .catch(() => {
+        if (active) setPlan(null);
       })
       .finally(() => {
         if (active) setLoading(false);

@@ -12,6 +12,7 @@ import {
   DB_NAME,
   getSqlite,
   resetDatabaseConnection,
+  runWithDb,
 } from './client';
 
 function bytesToBase64(bytes: Uint8Array): string {
@@ -45,7 +46,7 @@ function assertSqliteBackup(bytes: Uint8Array) {
 }
 
 export async function exportDatabase(): Promise<void> {
-  const data = getSqlite().serializeSync();
+  const data = await runWithDb(() => getSqlite().serializeSync());
   const path = `${FileSystem.cacheDirectory}${backupFileName()}`;
 
   await FileSystem.writeAsStringAsync(path, bytesToBase64(data), {

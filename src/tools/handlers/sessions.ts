@@ -4,8 +4,12 @@ import { sessions, routines } from '@/db/schema';
 import { nowIso, toolErr, toolOk } from '../utils';
 
 export async function startSession(input: { routine_id?: number; routine_name?: string }) {
-  const active = await getActiveSession({});
-  if (active.startsWith('{"ok":true')) {
+  const [activeRow] = await getDb()
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(isNull(sessions.completedAt))
+    .limit(1);
+  if (activeRow) {
     return toolErr('ya hay una sesión activa; complétala antes de iniciar otra');
   }
 
@@ -36,7 +40,7 @@ export async function getActiveSession(_input: Record<string, never>) {
       routineName: routines.name,
     })
     .from(sessions)
-    .innerJoin(routines, eq(sessions.routineId, routines.id))
+    .leftJoin(routines, eq(sessions.routineId, routines.id))
     .where(isNull(sessions.completedAt))
     .orderBy(desc(sessions.startedAt))
     .limit(1);
@@ -71,7 +75,7 @@ export async function listSessions(input: { limit?: number }) {
       completedAt: sessions.completedAt,
     })
     .from(sessions)
-    .innerJoin(routines, eq(sessions.routineId, routines.id))
+    .leftJoin(routines, eq(sessions.routineId, routines.id))
     .orderBy(desc(sessions.startedAt))
     .limit(input.limit ?? 20);
   return toolOk(rows);

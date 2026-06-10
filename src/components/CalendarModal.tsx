@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -21,6 +21,14 @@ export function CalendarModal({ visible, selectedDate, onSelect, onClose }: Prop
   const initial = parseYmd(selectedDate);
   const [viewYear, setViewYear] = useState(initial.getFullYear());
   const [viewMonth, setViewMonth] = useState(initial.getMonth());
+
+  useEffect(() => {
+    if (visible) {
+      const d = parseYmd(selectedDate);
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
+    }
+  }, [visible, selectedDate]);
 
   const today = todayLocalYmd();
   const firstOfMonth = new Date(viewYear, viewMonth, 1);

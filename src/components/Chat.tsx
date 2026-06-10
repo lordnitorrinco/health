@@ -93,7 +93,12 @@ export function Chat() {
   useFocusEffect(
     useCallback(() => {
       void refreshTodayStepsDisplay();
-    }, []),
+      if (!loading) {
+        loadChatHistory()
+          .then(setMessages)
+          .catch(() => {});
+      }
+    }, [loading]),
   );
 
   const send = useCallback(async () => {

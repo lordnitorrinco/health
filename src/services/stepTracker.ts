@@ -70,9 +70,13 @@ async function persistToday(total: number) {
 }
 
 function onWatchEvent(watchSteps: number) {
+  // Health Connect es la fuente de verdad cuando está activo; ignoramos el
+  // podómetro para no sobrescribir un total mayor con uno menor.
+  if (healthConnectMode) return;
+
   status.watchEvents++;
   status.lastWatchSteps = watchSteps;
-  status.source = healthConnectMode ? 'health-connect' : 'pedometer';
+  status.source = 'pedometer';
 
   const total = baselineSteps + watchSteps;
   // Actualización inmediata en pantalla, sin esperar a SQLite.
@@ -151,7 +155,7 @@ async function restartWatching() {
 function onAppActive() {
   void syncAndNotify();
   ensurePollingRunning();
-  if (status.pedometerPermission) void restartWatching();
+  if (!healthConnectMode && status.pedometerPermission) void restartWatching();
 }
 
 function onAppInactive() {
@@ -190,8 +194,8 @@ export async function startStepTracker() {
 
   bindAppStateSync();
 
-  await syncHealthConnectIfAvailable();
-  await startPedometer();
+  const usingHealthConnect = await syncHealthConnectIfAvailable();
+  if (!usingHealthConnect) await startPedometer();
 
   await syncAndNotify();
   ensurePollingRunning();
