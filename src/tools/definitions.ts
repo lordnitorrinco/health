@@ -103,22 +103,24 @@ export const toolDefinitions: Tool[] = [
   tool('list_sessions', 'Lista sesiones recientes.', { limit: { type: 'number' } }),
   tool('delete_session', 'Elimina sesión.', { id: { type: 'number' } }, ['id']),
 
-  tool('log_set', 'Registra serie peso/reps.', {
+  tool('log_set', 'Registra serie. Usa weight_kg+reps (mismo peso) o rep_weights (un peso por repetición, p. ej. [100,100,95]).', {
     session_id: { type: 'number' },
     exercise_id: { type: 'number' },
     exercise_name: { type: 'string' },
     weight_kg: { type: 'number' },
     reps: { type: 'number' },
-  }, ['weight_kg', 'reps']),
-  tool('list_sets', 'Lista series.', {
+    rep_weights: { type: 'array', items: { type: 'number' } },
+  }),
+  tool('list_sets', 'Lista series. Cada serie incluye rep_weights si tiene pesos por repetición.', {
     session_id: { type: 'number' },
     exercise_id: { type: 'number' },
     exercise_name: { type: 'string' },
   }),
-  tool('update_set', 'Actualiza serie.', {
+  tool('update_set', 'Actualiza serie. rep_weights sustituye los pesos por repetición.', {
     id: { type: 'number' },
     weight_kg: { type: 'number' },
     reps: { type: 'number' },
+    rep_weights: { type: 'array', items: { type: 'number' } },
   }, ['id']),
   tool('delete_set', 'Elimina serie.', { id: { type: 'number' } }, ['id']),
 

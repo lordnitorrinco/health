@@ -216,28 +216,6 @@ function DayPage({
         <Text style={styles.empty}>Sin comidas planificadas.</Text>
       )}
 
-      {plan?.shoppingList ? (
-        <>
-          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>
-            Lista de la compra (semana)
-          </Text>
-          <View style={styles.weekCard}>
-            <Text style={styles.weekText}>{plan.shoppingList}</Text>
-          </View>
-        </>
-      ) : null}
-
-      {plan?.batchCooking ? (
-        <>
-          <Text style={[styles.sectionTitle, styles.sectionSpacing]}>
-            Batch cooking (semana)
-          </Text>
-          <View style={styles.weekCard}>
-            <Text style={styles.weekText}>{plan.batchCooking}</Text>
-          </View>
-        </>
-      ) : null}
-
       {isSunday && plan ? (
         <>
           <Text style={[styles.sectionTitle, styles.sectionSpacing]}>

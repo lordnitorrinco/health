@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS sets (
   exercise_id INTEGER NOT NULL REFERENCES exercises(id),
   weight_kg REAL NOT NULL,
   reps INTEGER NOT NULL,
+  rep_weights TEXT,
   logged_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS sets_session_idx ON sets(session_id);
@@ -131,4 +132,5 @@ CREATE TABLE IF NOT EXISTS shopping_list (
 // y se ignora el error si la columna ya existe.
 export const COLUMN_MIGRATIONS = [
   'ALTER TABLE meals ADD COLUMN time TEXT;',
+  'ALTER TABLE sets ADD COLUMN rep_weights TEXT;',
 ];

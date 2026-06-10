@@ -5,12 +5,35 @@ import { findExerciseByName } from './exercises';
 import { nowIso, toolErr, toolOk } from '../utils';
 import { getActiveSession } from './sessions';
 
+type SetRow = typeof sets.$inferSelect;
+
+function mapSet(row: SetRow) {
+  let repWeights: number[] | null = null;
+  if (row.repWeights) {
+    try {
+      const parsed = JSON.parse(row.repWeights);
+      if (Array.isArray(parsed)) repWeights = parsed as number[];
+    } catch {
+      repWeights = null;
+    }
+  }
+  return { ...row, rep_weights: repWeights };
+}
+
+function normalizeRepWeights(values: unknown): number[] | null {
+  if (!Array.isArray(values) || values.length === 0) return null;
+  const nums = values.map((v) => Number(v));
+  if (nums.some((n) => Number.isNaN(n) || n < 0)) return null;
+  return nums;
+}
+
 export async function logSet(input: {
   session_id?: number;
   exercise_id?: number;
   exercise_name?: string;
-  weight_kg: number;
-  reps: number;
+  weight_kg?: number;
+  reps?: number;
+  rep_weights?: number[];
 }) {
   let sessionId = input.session_id;
   if (!sessionId) {
@@ -28,17 +51,35 @@ export async function logSet(input: {
   if (!exerciseId) return toolErr('exercise_id o exercise_name requerido');
   if (!sessionId) return toolErr('no hay sesión activa');
 
+  const perRep = normalizeRepWeights(input.rep_weights);
+  let weightKg: number;
+  let reps: number;
+  let repWeightsJson: string | null = null;
+
+  if (perRep) {
+    repWeightsJson = JSON.stringify(perRep);
+    reps = perRep.length;
+    weightKg = Math.max(...perRep);
+  } else {
+    if (input.weight_kg === undefined || input.reps === undefined) {
+      return toolErr('Indica rep_weights o bien weight_kg y reps');
+    }
+    weightKg = input.weight_kg;
+    reps = input.reps;
+  }
+
   const [row] = await getDb()
     .insert(sets)
     .values({
       sessionId,
       exerciseId,
-      weightKg: input.weight_kg,
-      reps: input.reps,
+      weightKg,
+      reps,
+      repWeights: repWeightsJson,
       loggedAt: nowIso(),
     })
     .returning();
-  return toolOk(row);
+  return toolOk(mapSet(row));
 }
 
 export async function listSets(input: {
@@ -63,20 +104,35 @@ export async function listSets(input: {
     .select()
     .from(sets)
     .where(conditions.length === 1 ? conditions[0] : and(...conditions));
-  return toolOk(rows);
+  return toolOk(rows.map(mapSet));
 }
 
 export async function updateSet(input: {
   id: number;
   weight_kg?: number;
   reps?: number;
+  rep_weights?: number[];
 }) {
-  const updates: Partial<{ weightKg: number; reps: number }> = {};
-  if (input.weight_kg !== undefined) updates.weightKg = input.weight_kg;
-  if (input.reps !== undefined) updates.reps = input.reps;
+  const updates: Partial<{
+    weightKg: number;
+    reps: number;
+    repWeights: string | null;
+  }> = {};
+
+  if (input.rep_weights !== undefined) {
+    const perRep = normalizeRepWeights(input.rep_weights);
+    if (!perRep) return toolErr('rep_weights inválido');
+    updates.repWeights = JSON.stringify(perRep);
+    updates.reps = perRep.length;
+    updates.weightKg = Math.max(...perRep);
+  } else {
+    if (input.weight_kg !== undefined) updates.weightKg = input.weight_kg;
+    if (input.reps !== undefined) updates.reps = input.reps;
+  }
+
   const [row] = await getDb().update(sets).set(updates).where(eq(sets.id, input.id)).returning();
   if (!row) return toolErr('serie no encontrada');
-  return toolOk(row);
+  return toolOk(mapSet(row));
 }
 
 export async function deleteSet(input: { id: number }) {

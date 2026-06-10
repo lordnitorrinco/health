@@ -59,6 +59,7 @@ export const sets = sqliteTable(
       .references(() => exercises.id),
     weightKg: real('weight_kg').notNull(),
     reps: integer('reps').notNull(),
+    repWeights: text('rep_weights'),
     loggedAt: text('logged_at').notNull(),
   },
   (t) => [
