@@ -17,6 +17,9 @@ export type DayMeal = {
   slot: MealSlot;
   description: string;
   calories: number | null;
+  proteinG: number | null;
+  carbsG: number | null;
+  fatG: number | null;
   time: string | null;
 };
 
@@ -75,6 +78,9 @@ export async function getDayPlan(date: string): Promise<DayPlan> {
         slot: m.slot as MealSlot,
         description: m.description,
         calories: m.calories,
+        proteinG: m.proteinG,
+        carbsG: m.carbsG,
+        fatG: m.fatG,
         time: m.time,
       }))
       .sort((a, b) => {

@@ -128,15 +128,18 @@ export const toolDefinitions: Tool[] = [
     date: { type: 'string' },
     slot: { type: 'string', enum: mealSlotEnum },
   }, ['date']),
-  tool('set_meal', 'Define comida del plan. time es la hora HH:MM.', {
+  tool('set_meal', 'Define comida del plan. time es la hora HH:MM. protein_g/carbs_g/fat_g son los macros en gramos.', {
     date: { type: 'string' },
     slot: { type: 'string', enum: mealSlotEnum },
     description: { type: 'string' },
     calories: { type: 'number' },
+    protein_g: { type: 'number' },
+    carbs_g: { type: 'number' },
+    fat_g: { type: 'number' },
     time: { type: 'string' },
   }, ['date', 'slot', 'description']),
   tool('delete_meal', 'Elimina comida del plan.', { id: { type: 'number' } }, ['id']),
-  tool('set_meals_batch', 'Define múltiples comidas del plan. time es la hora HH:MM.', {
+  tool('set_meals_batch', 'Define múltiples comidas del plan. time es la hora HH:MM. protein_g/carbs_g/fat_g son los macros en gramos.', {
     meals: {
       type: 'array',
       items: {
@@ -146,6 +149,9 @@ export const toolDefinitions: Tool[] = [
           slot: { type: 'string', enum: mealSlotEnum },
           description: { type: 'string' },
           calories: { type: 'number' },
+          protein_g: { type: 'number' },
+          carbs_g: { type: 'number' },
+          fat_g: { type: 'number' },
           time: { type: 'string' },
         },
         required: ['date', 'slot', 'description'],

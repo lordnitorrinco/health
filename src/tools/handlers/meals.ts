@@ -19,6 +19,9 @@ export async function setMeal(input: {
   slot: MealSlot;
   description: string;
   calories?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
   time?: string;
 }) {
   await getDb()
@@ -32,6 +35,9 @@ export async function setMeal(input: {
       slot: input.slot,
       description: input.description,
       calories: input.calories ?? null,
+      proteinG: input.protein_g ?? null,
+      carbsG: input.carbs_g ?? null,
+      fatG: input.fat_g ?? null,
       time: input.time?.trim() ?? null,
     })
     .returning();
@@ -49,6 +55,9 @@ export async function setMealsBatch(input: {
     slot: MealSlot;
     description: string;
     calories?: number;
+    protein_g?: number;
+    carbs_g?: number;
+    fat_g?: number;
     time?: string;
   }[];
 }) {
@@ -66,6 +75,9 @@ export async function setMealsBatch(input: {
         slot: m.slot,
         description: m.description,
         calories: m.calories ?? null,
+        proteinG: m.protein_g ?? null,
+        carbsG: m.carbs_g ?? null,
+        fatG: m.fat_g ?? null,
         time: m.time?.trim() ?? null,
       })
       .returning();

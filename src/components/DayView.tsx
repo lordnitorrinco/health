@@ -17,6 +17,7 @@ import { ExerciseBreakdownModal } from './ExerciseBreakdownModal';
 import {
   getDayPlan,
   mealSlotLabel,
+  type DayMeal,
   type DayPlan,
   type DayWorkout,
 } from '@/services/dayView';
@@ -204,6 +205,7 @@ function DayPage({
       )}
 
       <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Menú del día</Text>
+      {plan && plan.meals.length > 0 ? <DayMacroSummary meals={plan.meals} /> : null}
       {loading && !plan ? (
         <ActivityIndicator color="#60a5fa" style={{ marginTop: 12 }} />
       ) : plan && plan.meals.length > 0 ? (
@@ -219,6 +221,19 @@ function DayPage({
               </View>
             </View>
             <Text style={styles.mealDesc}>{m.description}</Text>
+            {m.proteinG != null || m.carbsG != null || m.fatG != null ? (
+              <View style={styles.macroRow}>
+                {m.proteinG != null ? (
+                  <Text style={styles.macroProt}>P {m.proteinG}g</Text>
+                ) : null}
+                {m.carbsG != null ? (
+                  <Text style={styles.macroCarb}>HC {m.carbsG}g</Text>
+                ) : null}
+                {m.fatG != null ? (
+                  <Text style={styles.macroFat}>G {m.fatG}g</Text>
+                ) : null}
+              </View>
+            ) : null}
           </View>
         ))
       ) : (
@@ -272,6 +287,27 @@ function DayPage({
   );
 }
 
+function DayMacroSummary({ meals }: { meals: DayMeal[] }) {
+  const sum = (pick: (m: DayMeal) => number | null) =>
+    meals.reduce((acc, m) => acc + (pick(m) ?? 0), 0);
+  const kcal = sum((m) => m.calories);
+  const prot = sum((m) => m.proteinG);
+  const carbs = sum((m) => m.carbsG);
+  const fat = sum((m) => m.fatG);
+  if (!kcal && !prot && !carbs && !fat) return null;
+
+  return (
+    <View style={styles.totalsCard}>
+      {kcal ? <Text style={styles.totalKcal}>{kcal} kcal</Text> : null}
+      <View style={styles.macroRow}>
+        {prot ? <Text style={styles.macroProt}>P {prot}g</Text> : null}
+        {carbs ? <Text style={styles.macroCarb}>HC {carbs}g</Text> : null}
+        {fat ? <Text style={styles.macroFat}>G {fat}g</Text> : null}
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
   dateSelector: {
@@ -304,6 +340,22 @@ const styles = StyleSheet.create({
   mealTime: { color: '#cbd5e1', fontSize: 13, fontWeight: '600' },
   mealCals: { color: '#64748b', fontSize: 13 },
   mealDesc: { color: '#e2e8f0', fontSize: 15, lineHeight: 21 },
+  macroRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  macroProt: { color: '#f87171', fontSize: 12, fontWeight: '700' },
+  macroCarb: { color: '#fbbf24', fontSize: 12, fontWeight: '700' },
+  macroFat: { color: '#34d399', fontSize: 12, fontWeight: '700' },
+  totalsCard: {
+    backgroundColor: '#111827',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  totalKcal: { color: '#f8fafc', fontSize: 15, fontWeight: '700' },
   weekCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, marginTop: 10 },
   weekCardLabel: { color: '#60a5fa', fontSize: 12, fontWeight: '700', marginBottom: 6 },
   weekText: { color: '#e2e8f0', fontSize: 14, lineHeight: 21 },

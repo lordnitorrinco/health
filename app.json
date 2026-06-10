@@ -2,14 +2,14 @@
   "expo": {
     "name": "Health",
     "slug": "health",
-    "version": "1.1.12",
+    "version": "1.1.13",
     "orientation": "portrait",
     "scheme": "health",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.lordnitorrinco.gym",
-      "versionCode": 14,
+      "versionCode": 15,
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.INTERNET",

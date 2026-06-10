@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS meals (
   slot TEXT NOT NULL,
   description TEXT NOT NULL,
   calories INTEGER,
+  protein_g INTEGER,
+  carbs_g INTEGER,
+  fat_g INTEGER,
   time TEXT
 );
 CREATE INDEX IF NOT EXISTS meals_date_slot_idx ON meals(date, slot);
@@ -133,4 +136,7 @@ CREATE TABLE IF NOT EXISTS shopping_list (
 export const COLUMN_MIGRATIONS = [
   'ALTER TABLE meals ADD COLUMN time TEXT;',
   'ALTER TABLE sets ADD COLUMN rep_weights TEXT;',
+  'ALTER TABLE meals ADD COLUMN protein_g INTEGER;',
+  'ALTER TABLE meals ADD COLUMN carbs_g INTEGER;',
+  'ALTER TABLE meals ADD COLUMN fat_g INTEGER;',
 ];

@@ -76,6 +76,9 @@ export const meals = sqliteTable(
     slot: text('slot').notNull(),
     description: text('description').notNull(),
     calories: integer('calories'),
+    proteinG: integer('protein_g'),
+    carbsG: integer('carbs_g'),
+    fatG: integer('fat_g'),
     time: text('time'),
   },
   (t) => [index('meals_date_slot_idx').on(t.date, t.slot)]
