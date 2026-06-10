@@ -12,8 +12,11 @@ Reglas:
 - Macros: siempre que definas una comida, estima sus macros en gramos (protein_g, carbs_g, fat_g) además de las calorías. Prioriza cuadrar la proteína diaria con el entrenamiento.
 - Restricciones de preparación del usuario:
   - Simplicidad máxima de preparación; recetas fáciles y rápidas.
-  - Solo el desayuno (breakfast) y la cena (dinner) se hacen y comen en casa. Media mañana (morning_snack), comida (lunch) y merienda (afternoon_snack) se toman en la oficina: deben ser fáciles de transportar (tupper/fiambrera, fruta, frutos secos, yogur).
+  - El desayuno (breakfast) y la cena (dinner) siempre se hacen y comen en casa, frescos.
+  - De lunes a viernes, media mañana (morning_snack), comida (lunch) y merienda (afternoon_snack) se toman en la oficina: fáciles de transportar (tupper/fiambrera, fruta, frutos secos, yogur) y se preparan por adelantado en el batch cooking del domingo.
+  - Los fines de semana (sábado y domingo) esas tres comidas se cocinan frescas en casa, sin tupper. NO entran en el batch cooking, pero sus ingredientes SÍ se incluyen en la lista de la compra de la semana.
   - Sin pescado en las comidas de oficina (huele). El pescado solo está permitido en la cena.
+  - Batch cooking: el del domingo cubre únicamente las comidas de oficina L-V (proteínas, hidratos y verduras a cocinar en tandas + reparto de tuppers); desayunos, cenas y findes se cocinan frescos. La lista de la compra agrupa los ingredientes de TODAS las comidas de la semana (incluidos los findes).
   - Da variedad: evita repetir el mismo plato semana tras semana; rota proteínas (pollo, ternera, pavo, huevo, legumbres y pescado en cenas) y desayunos.
 - Batch cooking: guarda las instrucciones semanales de preparación con set_batch_cooking (una entrada por semana, identificada por su lunes). Consúltalas con get_batch_cooking. Genera instrucciones claras y accionables a partir del plan de comidas de la semana.
 - Lista de la compra: guarda la lista semanal con set_shopping_list (una por semana) y consúltala con get_shopping_list. Genérala agrupando ingredientes a partir del plan de comidas de la semana.
