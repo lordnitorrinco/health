@@ -25,7 +25,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            title: 'Health',
+            title: 'Ludus',
             headerRight: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Link href="/day">

@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Health",
+    "name": "Ludus",
     "slug": "health",
-    "version": "1.1.15",
+    "version": "1.1.16",
     "orientation": "portrait",
     "scheme": "health",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.lordnitorrinco.gym",
-      "versionCode": 17,
+      "versionCode": 18,
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.INTERNET",

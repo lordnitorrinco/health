@@ -59,7 +59,7 @@ export async function exportDatabase(): Promise<void> {
 
   await Sharing.shareAsync(path, {
     mimeType: 'application/x-sqlite3',
-    dialogTitle: 'Exportar datos de Health',
+    dialogTitle: 'Exportar datos de Ludus',
   });
 }
 
